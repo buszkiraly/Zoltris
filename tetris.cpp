@@ -75,10 +75,10 @@ void display(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color and depth buffers
     //glMatrixMode(GL_MODELVIEW);     // To operate on model-view matrix
     
-     pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex);
 
     double cell_width = 0.1;
-	
+    
     vector<Cell*> cells = table->getCells();
     vector<Cell*> elem_cells;
     
@@ -100,18 +100,49 @@ void display(void)
 	glColor3f(cell->getR(), cell->getG(), cell->getB());
 	glLoadIdentity(); 
 	gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);             
-	glTranslatef(-cell_width*WIDTH/2+cell_width*j,-cell_width*HEIGHT/2+cell_width*i,-4.0);
+	glTranslatef(-cell_width*(double)WIDTH/2+cell_width*j + cell_width/2,-cell_width*(double)HEIGHT/2+cell_width*i + cell_width/2,-4.0);
 	glutSolidCube(cell_width-0.01);
 	
     } 
+    
+    glColor3f(1,0,0);
+    glLoadIdentity(); 
+    gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0); 
+    glBegin(GL_LINE_LOOP);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4 + 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 + 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 + 0.9*cell_width/2);
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);
+    glEnd();
+    glBegin(GL_LINE_LOOP); 
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  + 0.9*cell_width/2);
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  + 0.9*cell_width/2);
+    glEnd();
    
     glClear(GL_DEPTH_BUFFER_BIT);
   
     glFlush ();
   
     pthread_mutex_unlock(&mutex);
- 
-    //glFlush();
+
 }
  
  
@@ -129,13 +160,11 @@ void GL_init(int argc, char** argv)
     glutReshapeFunc(reshape);	
  
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black and opaque
-    glClearDepth(1.0f);                   // Set background depth to farthest
+    glClearDepth(5.0f);                   // Set background depth to farthest
     
-    GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-    GLfloat mat_shininess[] = { 100};
-    GLfloat light_position[] = { 5.0, -5.0, 5, 0.0 };
-    glClearColor (1.0, 1.0, 1.0, 0.0);
-    glShadeModel (GL_SMOOTH); 
+    GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 0.0 };
+    GLfloat mat_shininess[] = { 50};
+    GLfloat light_position[] = { 0.0, 4, 4, 0.0 };
 
     glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
