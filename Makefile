@@ -11,9 +11,14 @@ LIBS= -L/usr/local/lib/ \
       -lstdc++ \
       -lGLU
 	
-SOURCES= tetris.cpp \
-         cell.cpp \
-	 element.cpp
+SOURCES= src/tetris.cpp \
+         src/cell.cpp \
+	 src/element.cpp \
+	 src/table.cpp
+	 
+HEADERS= src/cell.hpp \
+	 src/element.hpp \
+	 src/table.hpp
 	
 OBJECTS=*.o 
 
@@ -23,7 +28,7 @@ LFLAGS= $(LIBS)
 tetris: tetris.o cell.o element.o table.o
 	$(CC) -o $(EXECUTABLE) $(OBJECTS) $(LFLAGS)
 	
-tetris.o: tetris.cpp cell.cpp cell.hpp element.cpp element.hpp table.cpp table.hpp
+tetris.o: $(SOURCES) $(HEADERS) 
 	$(CC) $(CFLAGS) -c $(SOURCES) 
 	
 clean: 
