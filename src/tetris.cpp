@@ -21,8 +21,8 @@
 #define W_WIDTH                 (400)
 
 // Board
-#define HEIGHT                   (30) 
-#define WIDTH                    (15)
+#define HEIGHT                   (20) 
+#define WIDTH                    (12)
 #define TOP_X                     (0)
 #define TOP_Y           (W_HEIGHT-70)
 #define BOTTOM_X         (W_WIDTH-70)
@@ -48,6 +48,20 @@ Element* element = NULL;
 Table *table;
 long score = 0;
 float eyez = 0;
+
+// Texture mapping
+/* storage for one texture  */
+GLuint texture[1];
+
+/* Image type - contains height, width, and data */
+struct Image {
+    unsigned long sizeX;
+    unsigned long sizeY;
+    char *data;
+};
+typedef struct Image Image;
+int ImageLoad(char *filename, Image *image);
+void LoadGLTextures();
 
 int main(int argc, char** argv){
 
@@ -77,17 +91,21 @@ void display(void)
     
     pthread_mutex_lock(&mutex);
 
-    double cell_width = 0.1;
+    double cell_width = 0.15;
     
     vector<Cell*> cells = table->getCells();
     vector<Cell*> elem_cells;
     
+   
     if (element != NULL) 
     {
         elem_cells = element->getCells();
         cells.reserve(cells.size() + elem_cells.size());
         cells.insert(cells.end(), elem_cells.begin(), elem_cells.end());
     }
+    
+    GLfloat color[4];
+    GLfloat shininess[] = {50};
 
     for (vector<Cell*>::iterator it = cells.begin(); it != cells.end(); ++it)
     {
@@ -97,17 +115,99 @@ void display(void)
 	
 	if (i >= HEIGHT) continue;   
 
-	glColor3f(cell->getR(), cell->getG(), cell->getB());
+        color[0] = 1;
+        color[1] = 1;
+        color[2] = 1;
+	color[3] = 1.0f;
+	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+
 	glLoadIdentity(); 
 	gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);             
 	glTranslatef(-cell_width*(double)WIDTH/2+cell_width*j + cell_width/2,-cell_width*(double)HEIGHT/2+cell_width*i + cell_width/2,-4.0);
-	glutSolidCube(cell_width-0.01);
+	//glutSolidCube(cell_width-0.01);
+	
+	glBegin(GL_QUADS);
+         glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(1.0f, 0.0f); glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(1.0f, 1.0f); glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+        glEnd();
+	glBegin(GL_QUADS);
+         glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(1.0f, 0.0f); glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(1.0f, 1.0f); glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
+         glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
+        glEnd();
+	glBegin(GL_QUADS);
+         glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(1.0f, 0.0f); glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(1.0f, 1.0f); glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, -0.9*cell_width/2);
+         glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, -0.9*cell_width/2);
+        glEnd();
+	glBegin(GL_QUADS);
+         glTexCoord2f(0.0f, 0.0f); glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(1.0f, 0.0f); glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, -0.9*cell_width/2);
+         glTexCoord2f(1.0f, 1.0f); glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
+         glTexCoord2f(0.0f, 1.0f); glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+        glEnd();
+	glBegin(GL_QUADS);
+         glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, -0.9*cell_width/2);
+         glTexCoord2f(1.0f, 0.0f); glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(1.0f, 1.0f); glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+         glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
+        glEnd();
 	
     } 
     
-    glColor3f(1,0,0);
+
+    color[0] = 0.1;
+    color[1] = 0.1;
+    color[2] = 0.1;
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
     glLoadIdentity(); 
-    gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0); 
+    gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);
+    glBindTexture(GL_TEXTURE_2D, texture[0]);   // choose the texture to use.
+   
+   
+    // Bounding box 
+    glBegin(GL_QUADS);
+      glTexCoord2f(0.0f, 0.0f); glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glTexCoord2f(1.0f, 0.0f); glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glTexCoord2f(1.0f, 1.0f); glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glTexCoord2f(0.0f, 1.0f); glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 - 0.9*cell_width/2);
+    glEnd();
+    color[0] = 0;
+    color[1] = 1;
+    color[2] = 0;
+    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+    glBegin(GL_QUADS);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);      
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);      
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+    glEnd();
+    glBegin(GL_QUADS);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);          
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2); 
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 + 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
+    glEnd();
+    glBegin(GL_QUADS); 
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  + 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 + 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 - 0.9*cell_width/2);
+    glEnd();
+    glBegin(GL_QUADS);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 + 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 - 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);  
+    glEnd();
+    
+    /*
+    // Bounding box skeleton
+    glColor3f(1,0,0);
     glBegin(GL_LINE_LOOP);
       glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
       glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
@@ -136,6 +236,8 @@ void display(void)
       glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
       glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  + 0.9*cell_width/2);
     glEnd();
+    */
+    
    
     glClear(GL_DEPTH_BUFFER_BIT);
   
@@ -164,15 +266,17 @@ void GL_init(int argc, char** argv)
     
     GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 0.0 };
     GLfloat mat_shininess[] = { 50};
-    GLfloat light_position[] = { 0.0, 4, 4, 0.0 };
+    GLfloat light_position[] = { 0.0, 0, -2, 1.0 };
 
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+    LoadGLTextures();				// Load The Texture(s) 
+    glEnable(GL_TEXTURE_2D);
+    //glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    //glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    glEnable(GL_COLOR_MATERIAL);
+    //glEnable(GL_COLOR_MATERIAL);
     glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
     glShadeModel(GL_SMOOTH);   // Enable smooth shading
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
@@ -288,6 +392,115 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
    glMatrixMode (GL_MODELVIEW);
 }
 
+// quick and dirty bitmap loader...for 24 bit bitmaps with 1 plane only.  
+// See http://www.dcs.ed.ac.uk/~mxr/gfx/2d/BMP.txt for more info.
+int ImageLoad(char *filename, Image *image) {
+    FILE *file;
+    unsigned long size;                 // size of the image in bytes.
+    unsigned long i;                    // standard counter.
+    unsigned short int planes;          // number of planes in image (must be 1) 
+    unsigned short int bpp;             // number of bits per pixel (must be 24)
+    char temp;                          // temporary color storage for bgr-rgb conversion.
+
+    // make sure the file is there.
+    if ((file = fopen(filename, "rb"))==NULL)
+    {
+	printf("File Not Found : %s\n",filename);
+	return 0;
+    }
+    
+    // seek through the bmp header, up to the width/height:
+    fseek(file, 18, SEEK_CUR);
+
+    // read the width
+    if ((i = fread(&image->sizeX, 4, 1, file)) != 1) {
+	printf("Error reading width from %s.\n", filename);
+	return 0;
+    }
+    printf("Width of %s: %lu\n", filename, image->sizeX);
+    
+    // read the height 
+    if ((i = fread(&image->sizeY, 4, 1, file)) != 1) {
+	printf("Error reading height from %s.\n", filename);
+	return 0;
+    }
+    printf("Height of %s: %lu\n", filename, image->sizeY);
+    
+    // calculate the size (assuming 24 bits or 3 bytes per pixel).
+    size = image->sizeX * image->sizeY * 3;
+
+    // read the planes
+    if ((fread(&planes, 2, 1, file)) != 1) {
+	printf("Error reading planes from %s.\n", filename);
+	return 0;
+    }
+    if (planes != 1) {
+	printf("Planes from %s is not 1: %u\n", filename, planes);
+	return 0;
+    }
+
+    // read the bpp
+    if ((i = fread(&bpp, 2, 1, file)) != 1) {
+	printf("Error reading bpp from %s.\n", filename);
+	return 0;
+    }
+    if (bpp != 24) {
+	printf("Bpp from %s is not 24: %u\n", filename, bpp);
+	return 0;
+    }
+	
+    // seek past the rest of the bitmap header.
+    fseek(file, 24, SEEK_CUR);
+
+    // read the data. 
+    image->data = (char *) malloc(size);
+    if (image->data == NULL) {
+	printf("Error allocating memory for color-corrected image data");
+	return 0;	
+    }
+
+    if ((i = fread(image->data, size, 1, file)) != 1) {
+	printf("Error reading image data from %s.\n", filename);
+	return 0;
+    }
+
+    for (i=0;i<size;i+=3) { // reverse all of the colors. (bgr -> rgb)
+	temp = image->data[i];
+	image->data[i] = image->data[i+2];
+	image->data[i+2] = temp;
+    }
+    
+    // we're done.
+    return 1;
+}
+
+// Load Bitmaps And Convert To Textures
+void LoadGLTextures() {	
+    // Load Texture
+    Image *image1;
+    
+    // allocate space for texture
+    image1 = (Image *) malloc(sizeof(Image));
+    if (image1 == NULL) {
+	printf("Error allocating space for image");
+	exit(0);
+    }
+
+    if (!ImageLoad("box.bmp", image1)) {
+	exit(1);
+    }        
+
+    // Create Texture	
+    glGenTextures(1, &texture[0]);
+    glBindTexture(GL_TEXTURE_2D, texture[0]);   // 2d texture (x and y size)
+
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); // scale linearly when image bigger than texture
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // scale linearly when image smalled than texture
+
+    // 2d texture, level of detail 0 (normal), 3 components (red, green, blue), x size from image, y size from image, 
+    // border 0 (normal), rgb color data, unsigned byte data, and finally the data itself.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image1->sizeX, image1->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, image1->data);
+};
 
 
 
