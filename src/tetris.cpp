@@ -51,12 +51,12 @@ float eyez = 0;
 
 // Texture mapping
 /* storage for one texture  */
-GLuint texture[1];
+GLuint texture[7];
 
 /* Image type - contains height, width, and data */
 struct Image {
-    unsigned long sizeX;
-    unsigned long sizeY;
+    unsigned short sizeX;
+    unsigned short sizeY;
     char *data;
 };
 typedef struct Image Image;
@@ -124,7 +124,9 @@ void display(void)
 	glLoadIdentity(); 
 	gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);             
 	glTranslatef(-cell_width*(double)WIDTH/2+cell_width*j + cell_width/2,-cell_width*(double)HEIGHT/2+cell_width*i + cell_width/2,-4.0);
-	//glutSolidCube(cell_width-0.01);
+	
+	
+	glBindTexture(GL_TEXTURE_2D, texture[cell->getType()]);   // choose the texture to use.
 	
 	glBegin(GL_QUADS);
          glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
@@ -166,7 +168,7 @@ void display(void)
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
     glLoadIdentity(); 
     gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);
-    glBindTexture(GL_TEXTURE_2D, texture[0]);   // choose the texture to use.
+
    
    
     // Bounding box 
@@ -205,40 +207,7 @@ void display(void)
       glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);  
     glEnd();
     
-    /*
-    // Bounding box skeleton
-    glColor3f(1,0,0);
-    glBegin(GL_LINE_LOOP);
-      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
-    glEnd();
-    glBegin(GL_LINE_LOOP);
-      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);
-      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4 + 0.9*cell_width/2);
-      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 + 0.9*cell_width/2);
-      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 + 0.9*cell_width/2);
-    glEnd();
-    glBegin(GL_LINE_LOOP);
-      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);
-    glEnd();
-    glBegin(GL_LINE_LOOP);
-      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);
-    glEnd();
-    glBegin(GL_LINE_LOOP); 
-      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  + 0.9*cell_width/2);
-    glEnd();
-    glBegin(GL_LINE_LOOP);
-      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  + 0.9*cell_width/2);
-    glEnd();
-    */
-    
-   
+  
     glClear(GL_DEPTH_BUFFER_BIT);
   
     glFlush ();
@@ -396,11 +365,14 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
 // See http://www.dcs.ed.ac.uk/~mxr/gfx/2d/BMP.txt for more info.
 int ImageLoad(char *filename, Image *image) {
     FILE *file;
-    unsigned long size;                 // size of the image in bytes.
+    unsigned long size = 0;                 // size of the image in bytes.
     unsigned long i;                    // standard counter.
     unsigned short int planes;          // number of planes in image (must be 1) 
     unsigned short int bpp;             // number of bits per pixel (must be 24)
     char temp;                          // temporary color storage for bgr-rgb conversion.
+
+
+    
 
     // make sure the file is there.
     if ((file = fopen(filename, "rb"))==NULL)
@@ -411,19 +383,23 @@ int ImageLoad(char *filename, Image *image) {
     
     // seek through the bmp header, up to the width/height:
     fseek(file, 18, SEEK_CUR);
-
+    
     // read the width
-    if ((i = fread(&image->sizeX, 4, 1, file)) != 1) {
+    if ((i = fread(&(image->sizeX), 4, 1, file)) != 1) {
 	printf("Error reading width from %s.\n", filename);
 	return 0;
     }
+    
+ 
     printf("Width of %s: %lu\n", filename, image->sizeX);
+      
     
     // read the height 
-    if ((i = fread(&image->sizeY, 4, 1, file)) != 1) {
+    if ((i = fread(&(image->sizeY), 4, 1, file)) != 1) {
 	printf("Error reading height from %s.\n", filename);
 	return 0;
     }
+    
     printf("Height of %s: %lu\n", filename, image->sizeY);
     
     // calculate the size (assuming 24 bits or 3 bytes per pixel).
@@ -470,36 +446,57 @@ int ImageLoad(char *filename, Image *image) {
 	image->data[i+2] = temp;
     }
     
+    fclose(file);
+    
     // we're done.
     return 1;
 }
 
 // Load Bitmaps And Convert To Textures
 void LoadGLTextures() {	
+
+printf("sizeof(short): %d\nsizeof(long): %d\nsizeof(char*): %d\nsizeof(Image): %d\nsizeof(Image*): %d",sizeof(short),sizeof(long),sizeof(char*),sizeof(Image),sizeof(Image*));
+
     // Load Texture
-    Image *image1;
-    
-    // allocate space for texture
-    image1 = (Image *) malloc(sizeof(Image));
-    if (image1 == NULL) {
-	printf("Error allocating space for image");
-	exit(0);
+    Image *images[7];
+    char filenames[7][15] = {
+                         "0-png.bmp",
+			 "1-png.bmp",
+			 "2-png.bmp",
+			 "3-png.bmp",
+			 "4-png.bmp",
+			 "5-png.bmp",
+			 "6-png.bmp"    
+                       };
+
+    for (int i = 0; i < 7; i++)
+    {
+	    // allocate space for texture
+	    images[i] = (Image *) malloc(sizeof(Image));
+	    if (images[i] == NULL) {
+		printf("Error allocating space for image");
+		exit(0);
+	    }
+
+	    if (!ImageLoad(filenames[i], images[i])) {
+		exit(1);
+	    }        
+
+	    // Create Texture	
+	    glGenTextures(i, &texture[i]);
+	    glBindTexture(GL_TEXTURE_2D, texture[i]);   // 2d texture (x and y size)
+
+	    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); // scale linearly when image bigger than texture
+	    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // scale linearly when image smalled than texture
+
+	    // 2d texture, level of detail 0 (normal), 3 components (red, green, blue), x size from image, y size from image, 
+	    // border 0 (normal), rgb color data, unsigned byte data, and finally the data itself.
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, images[i]->sizeX, images[i]->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, images[i]->data);
     }
+    
+    printf("sizeof(short): %d\nsizeof(long): %d\nsizeof(char*): %d\nsizeof(Image): %d\nsizeof(Image*): %d",sizeof(short),sizeof(long),sizeof(char*),sizeof(Image),sizeof(Image*));
+   
 
-    if (!ImageLoad("box.bmp", image1)) {
-	exit(1);
-    }        
-
-    // Create Texture	
-    glGenTextures(1, &texture[0]);
-    glBindTexture(GL_TEXTURE_2D, texture[0]);   // 2d texture (x and y size)
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); // scale linearly when image bigger than texture
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // scale linearly when image smalled than texture
-
-    // 2d texture, level of detail 0 (normal), 3 components (red, green, blue), x size from image, y size from image, 
-    // border 0 (normal), rgb color data, unsigned byte data, and finally the data itself.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image1->sizeX, image1->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, image1->data);
 };
 
 

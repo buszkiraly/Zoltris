@@ -23,6 +23,7 @@ public:
     bool rotate();
     vector<Cell*> getCells();
     bool reachedBottom();
+    int getType();
     
 };
 

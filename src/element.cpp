@@ -5,96 +5,52 @@ Element::Element(Table *table, int type)
     this->table = table;
     this->type = type;
         
-    float r = 1.0,g = 1.0,b = 1.0;
-    
-    switch (type)
-    {
-        case 0:
-	    r = 0.596;
-	    g = 0.96;
-	    b = 1.0;
-	    break;
-	case 1:
-	    r = 0.0;
-	    g = 0.0;
-	    b = 1.0;
-	    break;
-	case 2:
-	    r = 1.0;
-	    g = 0.27;
-	    b = 0.0;
-	    break;
-	case 3:
-	    r = 1.0;
-	    g = 1.0;
-	    b = 0.0;
-	    break;
-	case 4:
-	    r = 0.0;
-	    g = 1.0;
-	    b = 0.0;
-	    break;
-	case 5:
-	    r = 0.58;
-	    g = 0.0;
-	    b = 0.827;
-	    break;
-	case 6:
-	    r = 1.0;
-	    g = 0.0;
-	    b = 0.0;
-	    break;
-	default:
-	    break;
-    }	
-	
-   
     int x = table->getSpawnX();
     int y = table->getSpawnY();
     
     switch (type)
     {
         case 0: 
-	    cells[0] = new Cell(x,y,r,g,b);
-	    cells[1] = new Cell(x-1,y,r,g,b);
-	    cells[2] = new Cell(x+1,y,r,g,b);
-	    cells[3] = new Cell(x+2,y,r,g,b); 
+	    cells[0] = new Cell(x,y,type);
+	    cells[1] = new Cell(x-1,y,type);
+	    cells[2] = new Cell(x+1,y,type);
+	    cells[3] = new Cell(x+2,y,type);
 	    break;
 	case 1:
-	    cells[0] = new Cell(x,y,r,g,b);
-	    cells[1] = new Cell(x-1,y,r,g,b);
-	    cells[2] = new Cell(x-1,y+1,r,g,b);
-	    cells[3] = new Cell(x+1,y,r,g,b);
+	    cells[0] = new Cell(x,y,type);
+	    cells[1] = new Cell(x-1,y,type);
+	    cells[2] = new Cell(x-1,y+1,type);
+	    cells[3] = new Cell(x+1,y,type);
             break; 
 	case 2:
-	    cells[0] = new Cell(x,y,r,g,b);
-	    cells[1] = new Cell(x-1,y,r,g,b);
-	    cells[2] = new Cell(x+1,y,r,g,b);
-	    cells[3] = new Cell(x+1,y+1,r,g,b);
+	    cells[0] = new Cell(x,y,type);
+	    cells[1] = new Cell(x-1,y,type);
+	    cells[2] = new Cell(x+1,y,type);
+	    cells[3] = new Cell(x+1,y+1,type);
             break;
 	case 3:
-	    cells[0] = new Cell(x,y,r,g,b);
-	    cells[1] = new Cell(x-1,y,r,g,b);
-	    cells[2] = new Cell(x-1,y+1,r,g,b);
-	    cells[3] = new Cell(x,y+1,r,g,b);
+	    cells[0] = new Cell(x,y,type);
+	    cells[1] = new Cell(x-1,y,type);
+	    cells[2] = new Cell(x-1,y+1,type);
+	    cells[3] = new Cell(x,y+1,type);
             break; 
 	case 4:
-	    cells[0] = new Cell(x,y,r,g,b);
-	    cells[1] = new Cell(x-1,y,r,g,b);
-	    cells[2] = new Cell(x,y+1,r,g,b);
-	    cells[3] = new Cell(x+1,y+1,r,g,b);
+	    cells[0] = new Cell(x,y,type);
+	    cells[1] = new Cell(x-1,y,type);
+	    cells[2] = new Cell(x,y+1,type);
+	    cells[3] = new Cell(x+1,y+1,type);
             break;  
 	case 5:
-	    cells[0] = new Cell(x,y,r,g,b);
-	    cells[1] = new Cell(x-1,y,r,g,b);
-	    cells[2] = new Cell(x,y+1,r,g,b);
-	    cells[3] = new Cell(x+1,y,r,g,b);
+	    cells[0] = new Cell(x,y,type);
+	    cells[1] = new Cell(x-1,y,type);
+	    cells[2] = new Cell(x,y+1,type);
+	    cells[3] = new Cell(x+1,y,type);
             break;          
 	case 6:
-	    cells[0] = new Cell(x,y,r,g,b);
-	    cells[1] = new Cell(x,y+1,r,g,b);
-	    cells[2] = new Cell(x-1,y+1,r,g,b);
-	    cells[3] = new Cell(x+1,y,r,g,b);
+	    cells[0] = new Cell(x,y,type);
+	    cells[1] = new Cell(x,y+1,type);
+	    cells[2] = new Cell(x-1,y+1,type);
+	    cells[3] = new Cell(x+1,y,type);
             break; 
 	default: break;
     }
@@ -290,4 +246,9 @@ bool Element::reachedBottom()
     }
     
     return false;
+}
+
+int Element::getType()
+{
+    return type;
 }
