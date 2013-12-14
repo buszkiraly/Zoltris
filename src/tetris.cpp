@@ -18,7 +18,7 @@
 
 // Window
 #define W_HEIGHT                (700)
-#define W_WIDTH                 (400)
+#define W_WIDTH                 (800)
 
 // Board
 #define HEIGHT                   (20) 
@@ -26,7 +26,10 @@
 #define TOP_X                     (0)
 #define TOP_Y           (W_HEIGHT-70)
 #define BOTTOM_X         (W_WIDTH-70)
-#define BOTTOM_Y                  (0)  
+#define BOTTOM_Y                  (0)
+#define BACKGROUND_TEXTURE_NUM    (7)
+#define TABLE_TEXTURE_NUM         (BACKGROUND_TEXTURE_NUM + 1)
+#define NUMBER_OF_TEXTURES        (BACKGROUND_TEXTURE_NUM + 2)
 
 using namespace std;
 
@@ -44,7 +47,7 @@ int FPS = 60;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
-Element* element = NULL;
+Element* elements[2];
 Table *table;
 long score = 0;
 float eyez = 0;
@@ -57,19 +60,25 @@ GLuint texture[7];
 struct Image {
     unsigned short sizeX;
     unsigned short sizeY;
-    char *data;
+    unsigned char *data;
 };
 typedef struct Image Image;
 int ImageLoad(char *filename, Image *image);
 void LoadGLTextures();
 
 int main(int argc, char** argv){
-
+/*
+    Image image;
+    ImageLoad("32bit.bmp", &image);
+    exit(1);
+*/
     // Table init
     table = new Table(WIDTH,HEIGHT);
 
-    // Element init
-    element = new Element(table,rand()%7);
+    // elements[0] init
+    elements[0] = new Element(table,rand()%7);
+    elements[0]->spawn();
+    elements[1] = new Element(table,rand()%7);
 
     // OpenGL Init
     GL_init(argc,argv);
@@ -87,25 +96,55 @@ int main(int argc, char** argv){
 void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color and depth buffers
-    //glMatrixMode(GL_MODELVIEW);     // To operate on model-view matrix
     
     pthread_mutex_lock(&mutex);
 
     double cell_width = 0.15;
+
+    glLoadIdentity(); 
+    gluLookAt(0,0,0,0.0,0.0,-4,0,1,0);
+   
+    glBindTexture(GL_TEXTURE_2D, texture[BACKGROUND_TEXTURE_NUM]); 
+   
+    // Background
+    glBegin(GL_QUADS);
+      glTexCoord2f(0.0f, 0.0f); glVertex3f(-10,-10,-20);
+      glTexCoord2f(1.0f, 0.0f); glVertex3f(10,-10,-20);
+      glTexCoord2f(1.0f, 1.0f); glVertex3f(10,10,-20);
+      glTexCoord2f(0.0f, 1.0f); glVertex3f(-10,10,-20);
+    glEnd();
+    
+    // Bounding box 
+    glColor4f(1.0,1.0,1.0,0.1);
+    glDisable(GL_TEXTURE_2D);
+    glLoadIdentity(); 
+    gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);
+    // Bounding box 
+    glBegin(GL_QUADS);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
+      glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 - 0.9*cell_width/2);
+    glEnd();
     
     vector<Cell*> cells = table->getCells();
     vector<Cell*> elem_cells;
-    
    
-    if (element != NULL) 
+    if (elements[0] && elements[1]) 
     {
-        elem_cells = element->getCells();
+        elem_cells = elements[0]->getCells();
+        cells.reserve(cells.size() + elem_cells.size());
+        cells.insert(cells.end(), elem_cells.begin(), elem_cells.end());
+	
+	elements[1]->setCenter(WIDTH + 3, HEIGHT - 3);
+	elem_cells = elements[1]->getCells();
         cells.reserve(cells.size() + elem_cells.size());
         cells.insert(cells.end(), elem_cells.begin(), elem_cells.end());
     }
     
-    GLfloat color[4];
-    GLfloat shininess[] = {50};
+
+    glColor4f(1,1,1,1);
+    glEnable(GL_TEXTURE_2D);
 
     for (vector<Cell*>::iterator it = cells.begin(); it != cells.end(); ++it)
     {
@@ -115,16 +154,10 @@ void display(void)
 	
 	if (i >= HEIGHT) continue;   
 
-        color[0] = 1;
-        color[1] = 1;
-        color[2] = 1;
-	color[3] = 1.0f;
-	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
 	glLoadIdentity(); 
-	gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);             
+        gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);     
 	glTranslatef(-cell_width*(double)WIDTH/2+cell_width*j + cell_width/2,-cell_width*(double)HEIGHT/2+cell_width*i + cell_width/2,-4.0);
-	
 	
 	glBindTexture(GL_TEXTURE_2D, texture[cell->getType()]);   // choose the texture to use.
 	
@@ -159,29 +192,20 @@ void display(void)
          glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
         glEnd();
 	
+	glClear(GL_DEPTH_BUFFER_BIT);
+	
     } 
     
 
-    color[0] = 0.1;
-    color[1] = 0.1;
-    color[2] = 0.1;
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
-    glLoadIdentity(); 
-    gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);
+       
 
    
    
-    // Bounding box 
-    glBegin(GL_QUADS);
-      glTexCoord2f(0.0f, 0.0f); glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glTexCoord2f(1.0f, 0.0f); glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glTexCoord2f(1.0f, 1.0f); glVertex3f(cell_width*(double)WIDTH/2 - 0.1*cell_width,cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4  - 0.9*cell_width/2);
-      glTexCoord2f(0.0f, 1.0f); glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width, cell_width*(double)HEIGHT/2 - 0.1*cell_width,-4 - 0.9*cell_width/2);
-    glEnd();
+/*
     color[0] = 0;
-    color[1] = 1;
+    color[1] = 0.3;
     color[2] = 0;
-    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
     glBegin(GL_QUADS);
       glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
       glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);      
@@ -206,11 +230,12 @@ void display(void)
       glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  - 0.9*cell_width/2);
       glVertex3f(-cell_width*(double)WIDTH/2 + 0.1*cell_width,-cell_width*(double)HEIGHT/2 + 0.1*cell_width,-4  + 0.9*cell_width/2);  
     glEnd();
-    
+    */
   
     glClear(GL_DEPTH_BUFFER_BIT);
   
-    glFlush ();
+    glFlush();
+    glutSwapBuffers();
   
     pthread_mutex_unlock(&mutex);
 
@@ -220,7 +245,7 @@ void display(void)
 void GL_init(int argc, char** argv)
 {
     glutInit(&argc,argv);
-    glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(W_WIDTH,W_HEIGHT);
     glutInitWindowPosition(0,0);
     glutCreateWindow("Tetris");
@@ -241,11 +266,14 @@ void GL_init(int argc, char** argv)
     glEnable(GL_TEXTURE_2D);
     //glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
     //glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    //glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
+    //glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHT0);
     //glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_BLEND); 
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glShadeModel (GL_FLAT);
     glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
     glShadeModel(GL_SMOOTH);   // Enable smooth shading
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
@@ -270,13 +298,13 @@ void *logic_thread_run(void*)
 	    case 3: score += 300; break;
 	    case 4: score += 1200; break;
 	}
-	if (element)
+	if (elements[0])
 	{
-	    if (element->reachedBottom())
+	    if (elements[0]->reachedBottom())
 	    {
 	        attachElement();   
 	    }
-	    element->step(DOWN);
+	    elements[0]->step(DOWN);
 	}
 	pthread_mutex_unlock(&mutex);
 	usleep(200000); 
@@ -296,22 +324,23 @@ void timer(int v)
 
 void keyboard_callback(unsigned char key,int x, int y)
 {
-    if (key == 0x20) element->rotate();
+    if (key == 0x20) elements[0]->rotate();
 }
 
 void special_callback(int key,int x, int y)
 {
-    if (element == NULL) return; 
+    if (elements[0] == NULL) return; 
     
     int dir = -1;
 
     switch(key)
     {
     case GLUT_KEY_UP:
-        element->rotate();
+        elements[0]->rotate();
         break;
     case GLUT_KEY_DOWN:
-        dir = DOWN;
+        while (!elements[0]->reachedBottom()) elements[0]->step(DOWN);
+	return;
         break;
     case GLUT_KEY_LEFT:
         dir = LEFT;
@@ -323,23 +352,39 @@ void special_callback(int key,int x, int y)
         break;
     }
     
-    element->step(dir);
+    elements[0]->step(dir);
    
 }
 
 
 void attachElement()
 {
-    table->attachCells(element->getCells());
-    delete element;
-    element = new Element(table,rand()%7);
-    if (element->reachedBottom()) 
+
+
+    try
+    {
+        table->attachCells(elements[0]->stealCells());
+    }
+    catch(const char* e)
+    {
+        cerr << "Exception: " << e << endl;
+	exit(1);
+    }
+    
+    delete elements[0];
+    elements[0] = elements[1];
+    elements[0]->spawn();
+    elements[1] = new Element(table,rand()%7);
+    if (elements[0]->reachedBottom()) 
     {
         cout << "end" << endl;
 	delete table;
-	delete element;
+	delete elements[0];
+	delete elements[1];
 	table = new Table(WIDTH, HEIGHT);
-	element = new Element(table,rand()%7);
+	elements[0] = new Element(table,rand()%7);
+	elements[0]->spawn();
+	elements[1] = new Element(table,rand()%7);
 	score = 0;
     }
     
@@ -403,7 +448,7 @@ int ImageLoad(char *filename, Image *image) {
     printf("Height of %s: %lu\n", filename, image->sizeY);
     
     // calculate the size (assuming 24 bits or 3 bytes per pixel).
-    size = image->sizeX * image->sizeY * 3;
+    size = image->sizeX * image->sizeY * 4;
 
     // read the planes
     if ((fread(&planes, 2, 1, file)) != 1) {
@@ -420,32 +465,58 @@ int ImageLoad(char *filename, Image *image) {
 	printf("Error reading bpp from %s.\n", filename);
 	return 0;
     }
-    if (bpp != 24) {
-	printf("Bpp from %s is not 24: %u\n", filename, bpp);
-	return 0;
-    }
 	
-    // seek past the rest of the bitmap header.
-    fseek(file, 24, SEEK_CUR);
-
-    // read the data. 
-    image->data = (char *) malloc(size);
+ 
+    image->data = (unsigned char *) malloc(size);
     if (image->data == NULL) {
 	printf("Error allocating memory for color-corrected image data");
 	return 0;	
     }
 
-    if ((i = fread(image->data, size, 1, file)) != 1) {
-	printf("Error reading image data from %s.\n", filename);
-	return 0;
+    if (bpp == 32)
+    {
+    
+        // seek past the rest of the bitmap header.
+        fseek(file, 104, SEEK_CUR);
+       
+        if ((i = fread(image->data, size, 1, file)) != 1) {
+	    printf("Error reading image data from %s.\n", filename);
+	    return 0;
+        }  
+	
+	for (i=0;i<size;i+=4) 
+	{ // reverse all of the colors. (abgr -> rgba)
+		temp = image->data[i];
+		image->data[i] = image->data[i+3];  
+		image->data[i+3] = temp;
+		temp = image->data[i+1];
+		image->data[i+1] = image->data[i+2]; 
+		image->data[i+2] = temp;
+        } 
+    }
+    else
+    {
+        // seek past the rest of the bitmap header.
+        fseek(file, 24, SEEK_CUR);
+        for (i = 0; i < image->sizeX*image->sizeX; i++)
+	{
+	    if (!fread(image->data + i*4 , 3, 1, file))
+	    {
+	        printf("Error reading image data from %s.\n", filename);
+	        return 0;
+            }
+
+
+	    temp = image->data[i*4+1];
+	    image->data[i*4+1] = image->data[i*4];
+	    image->data[i*4] = temp;
+	    
+	    image->data[i*4+3] = 255;
+	    	    
+	       
+	}
     }
 
-    for (i=0;i<size;i+=3) { // reverse all of the colors. (bgr -> rgb)
-	temp = image->data[i];
-	image->data[i] = image->data[i+2];
-	image->data[i+2] = temp;
-    }
-    
     fclose(file);
     
     // we're done.
@@ -458,18 +529,20 @@ void LoadGLTextures() {
 printf("sizeof(short): %d\nsizeof(long): %d\nsizeof(char*): %d\nsizeof(Image): %d\nsizeof(Image*): %d",sizeof(short),sizeof(long),sizeof(char*),sizeof(Image),sizeof(Image*));
 
     // Load Texture
-    Image *images[7];
-    char filenames[7][15] = {
-                         "0-png.bmp",
-			 "1-png.bmp",
-			 "2-png.bmp",
-			 "3-png.bmp",
-			 "4-png.bmp",
-			 "5-png.bmp",
-			 "6-png.bmp"    
+    Image *images[NUMBER_OF_TEXTURES];
+    char filenames[NUMBER_OF_TEXTURES][20] = {
+                         "0-32.bmp",
+			 "1-32.bmp",
+			 "2-32.bmp",
+			 "3-32.bmp",
+			 "4-32.bmp",
+			 "5-32.bmp",
+			 "6-32.bmp",
+			 "background32.bmp",
+			 "0-32.bmp"  
                        };
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < NUMBER_OF_TEXTURES; i++)
     {
 	    // allocate space for texture
 	    images[i] = (Image *) malloc(sizeof(Image));
@@ -489,13 +562,11 @@ printf("sizeof(short): %d\nsizeof(long): %d\nsizeof(char*): %d\nsizeof(Image): %
 	    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); // scale linearly when image bigger than texture
 	    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); // scale linearly when image smalled than texture
 
-	    // 2d texture, level of detail 0 (normal), 3 components (red, green, blue), x size from image, y size from image, 
+	    // 2d texture, level of detail 0 (normal), RGBA, x size from image, y size from image, 
 	    // border 0 (normal), rgb color data, unsigned byte data, and finally the data itself.
-	    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, images[i]->sizeX, images[i]->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, images[i]->data);
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, images[i]->sizeX, images[i]->sizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, images[i]->data);
     }
-    
-    printf("sizeof(short): %d\nsizeof(long): %d\nsizeof(char*): %d\nsizeof(Image): %d\nsizeof(Image*): %d",sizeof(short),sizeof(long),sizeof(char*),sizeof(Image),sizeof(Image*));
-   
+  
 
 };
 

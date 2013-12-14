@@ -5,8 +5,10 @@ Element::Element(Table *table, int type)
     this->table = table;
     this->type = type;
         
-    int x = table->getSpawnX();
-    int y = table->getSpawnY();
+    spawned = false;
+	
+    x = 0;
+    y = 5;
     
     switch (type)
     {
@@ -53,6 +55,14 @@ Element::Element(Table *table, int type)
 	    cells[3] = new Cell(x+1,y,type);
             break; 
 	default: break;
+    }
+}
+
+Element::~Element()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (cells[i]) delete cells[i];
     }
 }
 
@@ -232,6 +242,18 @@ vector<Cell*> Element::getCells()
     return ret;
 }
 
+vector<Cell*> Element::stealCells()
+{
+    vector<Cell*> ret;
+    
+    for (int i = 0; i < 4; i++) 
+    {
+        ret.push_back(cells[i]);
+        cells[i] = NULL;
+    }
+    return ret;
+}
+
 bool Element::reachedBottom()
 {
     for (int i = 0; i < 4; i++)
@@ -252,3 +274,33 @@ int Element::getType()
 {
     return type;
 }
+
+bool Element::isSpawned()
+{
+    return spawned;
+}
+
+void Element::spawn()
+{
+    if (spawned) return;
+    else
+    {
+        setCenter(table->getSpawnX(), table->getSpawnY());
+	spawned = true;
+    }
+}
+
+void Element::setCenter(int x, int y)
+{
+
+    for (int i = 0; i < 4; i++)
+    {
+        cells[i]->setX(cells[i]->getX() - this->x + x);
+        cells[i]->setY(cells[i]->getY() - this->y + y);
+    }
+    
+    this->x = x;
+    this->y = y;
+}
+
+

@@ -16,7 +16,7 @@ class Table
 public:
 
     Table(int width, int height);
-    ~Table() { delete[] table;} 
+    ~Table();
     
     vector<Cell*> getCells();        
     int clear_full_rows();

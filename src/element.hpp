@@ -14,16 +14,22 @@ class Element
     Cell  *cells[4];
     Table *table;
     int   type;
+    bool  spawned;
+    int   x,y;
     
 public:
     Element(Table *table, int type);
-    ~Element(){}
+    ~Element();
     
     bool step(int dir);
     bool rotate();
     vector<Cell*> getCells();
+    vector<Cell*> stealCells();
     bool reachedBottom();
     int getType();
+    bool isSpawned();
+    void spawn();
+    void setCenter(int x, int y);
     
 };
 

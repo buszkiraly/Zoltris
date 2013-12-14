@@ -29,6 +29,17 @@ Table::Table(int width, int height)
 
 }
 
+Table::~Table()
+{
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+	{
+	    if (table[i][j] != NULL) delete table[i][j];
+	}
+    }
+}
+
 int Table::clear_full_rows()
 {
 
@@ -144,6 +155,8 @@ bool Table::attachCells(vector<Cell*> cells)
 	int i = cell->getY();
 	int j = cell->getX();
 	
+	if (i<0 || i>=height || j<0 || j>=width) throw "Cell attachment out of range";
+		
 	table[i][j] = cell;	
     } 
 
