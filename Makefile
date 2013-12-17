@@ -1,6 +1,6 @@
 # Makefile 
 
-CC=gcc
+CC=g++
 EXECUTABLE=tetris
 INCLUDES=
 	  
@@ -9,23 +9,29 @@ LIBS= -L/usr/local/lib/ \
       -lGL \
       -lpthread \
       -lstdc++ \
-      -lGLU
+      -lGLU \
+      -lSDL2_mixer \
+      -lSDL2
 	
 SOURCES= src/tetris.cpp \
          src/cell.cpp \
 	 src/element.cpp \
-	 src/table.cpp
+	 src/table.cpp \
+	 src/graphics.cpp \
+	 src/music.cpp
 	 
 HEADERS= src/cell.hpp \
 	 src/element.hpp \
-	 src/table.hpp
+	 src/table.hpp \
+	 src/graphics.hpp \
+	 src/music.hpp
 	
 OBJECTS=*.o 
 
 CFLAGS= -Wall $(INCLUDES) -g
 LFLAGS= $(LIBS)
 
-tetris: tetris.o cell.o element.o table.o
+tetris: tetris.o cell.o element.o table.o graphics.o music.o
 	$(CC) -o $(EXECUTABLE) $(OBJECTS) $(LFLAGS)
 	
 tetris.o: $(SOURCES) $(HEADERS) 
