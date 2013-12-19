@@ -21,6 +21,7 @@
 // Board
 #define HEIGHT                   (20) 
 #define WIDTH                    (12)
+#define NEXT_CTR                 (8)
 
 using namespace std;
 
@@ -29,6 +30,9 @@ void restart();
 
 long score = 0;
 bool _pause = false;
+bool to_rotate = false;
+unsigned short dir_to_step = -1;
+unsigned char next_ctr = NEXT_CTR;
 
 Element* elements[2];
 Table *table;
@@ -64,37 +68,57 @@ void logic()
     ctr++;
 
     if (_pause) music->pause_background();
-
     
-    if (ctr%20 != 0) return; 
- 
- 
     if (!_pause)
     {
         music->resume_background();
+	
+		if (ctr%2) 
+		{
+			if (to_rotate) elements[0]->rotate();
+			to_rotate = false;
+	    
+			if (elements[0])
+			{
+				if (dir_to_step == DOWN) while (!elements[0]->reachedBottom()) elements[0]->step(DOWN);
+				else elements[0]->step(dir_to_step); 
+		
+				dir_to_step = -1;
+				next_ctr--;
+			}
+	    
+
+		}
+	
+		if (elements[0] && (next_ctr == 0))
+		{	    
+	
+			if (elements[0]->reachedBottom())
+			{
+				attachElement();
+			}
+			
+			elements[0]->step(DOWN);
+
+			unsigned char rows = table->clear_full_rows();
+
+			if (rows) music->play_chunk();
+
+			switch (rows)
+			{
+				case 1: score += 40; break;
+				case 2: score += 100; break;
+				case 3: score += 300; break;
+				case 4: score += 1200; break;
+				default: break;
+			}
+	
+			next_ctr = NEXT_CTR;
+	    
+		}
     
-	int rows = table->clear_full_rows();
 
-	cout << "score: " << score << endl;
 
-        if (rows) music->play_chunk();
-
-	switch (rows)
-	{
-	    case 1: score += 40; break;
-	    case 2: score += 100; break;
-	    case 3: score += 300; break;
-	    case 4: score += 1200; break;
-	    default: break;
-	}
-	if (elements[0])
-	{
-	    if (elements[0]->reachedBottom())
-	    {
-		attachElement();   
-	    }
-	    elements[0]->step(DOWN);
-	}
     }
 	
 }
@@ -126,10 +150,6 @@ void keyboard_callback(unsigned char key,int x, int y)
     if (key == 'p') _pause = !_pause;
     if (key == 'r') restart();
     if (key == 27) exit(0);
-    
-    if (_pause) return;
-    
-    if (key == 0x20) elements[0]->rotate();
 }
 
 void special_callback(int key,int x, int y)
@@ -138,29 +158,24 @@ void special_callback(int key,int x, int y)
 
     if (elements[0] == NULL) return; 
     
-    int dir = -1;
-
     switch(key)
     {
     case GLUT_KEY_UP:
-        elements[0]->rotate();
+        to_rotate = true;
         break;
     case GLUT_KEY_DOWN:
-        while (!elements[0]->reachedBottom()) elements[0]->step(DOWN);
-	return;
+        dir_to_step = DOWN;
         break;
     case GLUT_KEY_LEFT:
-        dir = LEFT;
+        dir_to_step = LEFT;
         break;
     case GLUT_KEY_RIGHT:
-        dir = RIGHT;
+        dir_to_step = RIGHT;
         break;
     default:
         break;
     }
-    
-    elements[0]->step(dir);
-   
+
 }
 
 void restart()

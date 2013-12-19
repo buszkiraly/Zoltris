@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sstream>
 
-#define TICK 10 // ms
+#define TICK 30 // ms
 
 // Texture mapping
 GLuint texture[NUMBER_OF_TEXTURES];
