@@ -1,5 +1,6 @@
 #include "graphics.hpp"
 #include "tetris.hpp"
+#include "music.hpp"
 
 #include <string.h>
 #include <sstream>
@@ -12,10 +13,21 @@ int FPS = 60;
 float eyez = 0;
 double cell_width = 0.15;
 
-extern Element* elements[2];
+extern Element **elements;
 extern Table *table;
 extern bool _pause;
 extern long score;
+extern t_gamestate gamestate;
+extern string player_name;
+extern vector<player_score> scores;
+extern char main_menu[5][20];
+extern char options_menu[5][20];
+extern unsigned char menu_index; 
+extern Music *music;
+extern unsigned short speed;
+extern unsigned short preview_nr;
+extern bool shadow;
+extern Element *shadow_element; 
 
 void timer(int v)
 {
@@ -240,6 +252,7 @@ void graphics_init(int argc, char** argv)
 
 void display()
 {
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color and depth buffers
 
     glLoadIdentity(); 
@@ -279,10 +292,14 @@ void display()
         cells.reserve(cells.size() + elem_cells.size());
         cells.insert(cells.end(), elem_cells.begin(), elem_cells.end());
 	
-	elements[1]->setCenter(WIDTH + 3, HEIGHT - 3);
-	elem_cells = elements[1]->getCells();
-        cells.reserve(cells.size() + elem_cells.size());
-        cells.insert(cells.end(), elem_cells.begin(), elem_cells.end());
+	    for (int i = 0; i < preview_nr; i++)
+		{
+			elements[i+1]->setCenter(WIDTH + 3, HEIGHT - 3 - i * 3);
+			elem_cells = elements[i+1]->getCells();
+			cells.reserve(cells.size() + elem_cells.size());
+			cells.insert(cells.end(), elem_cells.begin(), elem_cells.end());
+		}
+		
     }
     
     glEnable(GL_TEXTURE_2D);
@@ -298,7 +315,7 @@ void display()
 
 	glLoadIdentity(); 
 	glColor4f(1,1,1,1);
-        gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);     
+	gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);     
 	glTranslatef(-cell_width*(double)WIDTH/2+cell_width*j + cell_width/2,-cell_width*(double)HEIGHT/2+cell_width*i + cell_width/2,-4.0);
 	
 	glBindTexture(GL_TEXTURE_2D, texture[cell->getType()]);   // choose the texture to use.
@@ -334,17 +351,67 @@ void display()
          glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
         glEnd();
 	
-	//glClear(GL_DEPTH_BUFFER_BIT);
+    } 
+	
+	cells.clear();
+	if (shadow_element) cells = shadow_element->getCells();
+	
+	for (vector<Cell*>::iterator it = cells.begin(); it != cells.end(); ++it)
+    {
+    	Cell* cell = *it;
+    	int i = cell->getY();
+    	int j = cell->getX(); 
+	
+	if (i >= HEIGHT) continue;   
+
+
+	glLoadIdentity(); 
+	glColor4f(0.5,0.5,0.5,0.5);
+	gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);     
+	glTranslatef(-cell_width*(double)WIDTH/2+cell_width*j + cell_width/2,-cell_width*(double)HEIGHT/2+cell_width*i + cell_width/2,-4.0);
+		
+	glBegin(GL_QUADS);
+         glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+	glEnd();
+	glBegin(GL_QUADS);
+         glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
+         glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
+	glEnd();
+	glBegin(GL_QUADS);
+         glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, -0.9*cell_width/2);
+         glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, -0.9*cell_width/2);
+	glEnd();
+	glBegin(GL_QUADS);
+         glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, -0.9*cell_width/2, -0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
+         glVertex3f(0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+	glEnd();
+	glBegin(GL_QUADS);
+         glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, -0.9*cell_width/2);
+         glVertex3f(-0.9*cell_width/2, -0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, 0.9*cell_width/2);
+         glVertex3f(-0.9*cell_width/2, 0.9*cell_width/2, -0.9*cell_width/2);
+	glEnd();
 	
     } 
     
+	// printing actual score
+	glColor4f(0,1,0,1);
     printGL("Score",
             -cell_width*(double)WIDTH/2 + 0.1*cell_width - 0.2,
 	    cell_width*(double)HEIGHT/2 - 0.1*cell_width - 0.2,
+		-4.0,
 	    0.1,
 	    0.15,
-	    1,
-	    0,0,1,1);
+	    1);
 	    
 	    
     string num;
@@ -355,12 +422,54 @@ void display()
     printGL(num.c_str(),
             -cell_width*(double)WIDTH/2 + 0.1*cell_width - 0.2,
 	    cell_width*(double)HEIGHT/2 - 0.1*cell_width - 0.4,
+		-4.0,
 	    0.1,
 	    0.15,
-	    1,
-	    0,0,1,1);    
+	    1); 
+		
+		
+	// printing high scores
+	float y_index = 0;
+	float x_index = -1.3;
+	
+	glColor4f(0,1,0,1);
+	
+	printGL("High Scores",
+	        x_index + 0.3,
+			y_index + 0.3,
+			-4.0,
+			0.075,
+			0.15,
+			1);
+	for (vector<player_score>::iterator it = scores.begin(); it != scores.end(); ++it)
+	{
+	    player_score pl_score = *it;
+		
+	    printGL(pl_score.name.append(" - ").c_str(),
+            x_index,
+			y_index,
+			-4.0,
+			0.05,
+			0.1,
+			1);
+	    
+	    string num;
+		ostringstream convert;
+		convert << pl_score.score;
+		num = convert.str();	    
+	    
+		printGL(num.c_str(),
+            x_index,
+			y_index,
+			-4.0,
+			0.05,
+			0.1,
+			0); 
+			
+		y_index -= 0.125;	
+	}	   
     
-    if (_pause)
+    if (gamestate == paused)
     {
     glLoadIdentity();
     gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0); 
@@ -375,43 +484,222 @@ void display()
         glEnd();
 	glEnable(GL_DEPTH_TEST);
     }	
+	else if (gamestate == end)
+	{
+	    glLoadIdentity();
+		gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0); 
+		glDisable(GL_TEXTURE_2D);
+		glColor4f(0.08,0.08,0.08,0.5);
+		glBegin(GL_QUADS);
+		  glVertex3f(-1,-1,-2);
+		  glVertex3f(1,-1,-2);
+		  glVertex3f(1,1,-2);
+		  glVertex3f(-1,1,-2);
+		glEnd();
+	    glEnable(GL_TEXTURE_2D);
+		
+		glDisable(GL_DEPTH_TEST);
+        glColor4f(0,1,0,1);
+		printGL("Name: ",
+            0.0,
+			0,
+			-3.0,
+			0.1,
+			0.15,
+			1);
+			
+		printGL(player_name.c_str(),
+            0.0,
+			0,
+			-3.0,
+			0.1,
+			0.15,
+			0);
+		glEnable(GL_DEPTH_TEST);	
+	}
+	else if (gamestate == menu)
+	{
+		glLoadIdentity();
+		gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0); 
+		glDisable(GL_TEXTURE_2D);
+		glColor4f(0.08,0.08,0.08,0.5);
+		glBegin(GL_QUADS);
+		  glVertex3f(-1,-1,-2);
+		  glVertex3f(1,-1,-2);
+		  glVertex3f(1,1,-2);
+		  glVertex3f(-1,1,-2);
+		glEnd();
+	    glEnable(GL_TEXTURE_2D);
+		
+		
+		glDisable(GL_DEPTH_TEST);
+		
+		for (int i = 0; i < 5; i++)
+		{
+			if (i == menu_index) glColor4f(1,0,0,1);
+			else glColor4f(0,1,0,1);
+			printGL(main_menu[i],
+				0.0,
+				0.5 - i * 0.2,
+				-3.0,
+				0.1,
+				0.15,
+				2);
+		}
+		
+		glEnable(GL_DEPTH_TEST);
+	}
+	else if (gamestate == options)
+	{
+		glLoadIdentity();
+		gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0); 
+		glDisable(GL_TEXTURE_2D);
+		glColor4f(0.08,0.08,0.08,0.5);
+		glBegin(GL_QUADS);
+		  glVertex3f(-1,-1,-2);
+		  glVertex3f(1,-1,-2);
+		  glVertex3f(1,1,-2);
+		  glVertex3f(-1,1,-2);
+		glEnd();
+	    glEnable(GL_TEXTURE_2D);
+		
+		
+		glDisable(GL_DEPTH_TEST);
+		
+		for (int i = 0; i < 5; i++)
+		{
+			if (i == menu_index) glColor4f(1,0,0,1);
+			else glColor4f(0,1,0,1);
+			printGL(options_menu[i],
+				0.0,
+				0.5 - i * 0.2,
+				-3.0,
+				0.1,
+				0.15,
+				1);
+				
+			string num;
+			ostringstream convert;		
+				
+			switch (i)
+			{
+			    case 0 : convert << "  " << music->get_background_volume();
+						 num = convert.str();
+				
+						 printGL(num.c_str(),
+						 0.0,
+						 0.5 - i * 0.2,
+						 -3.0,
+						 0.1,
+						 0.15,
+						 0);				
+				
+				         break;
+				case 1 : convert << "  " << music->get_chunk_volume();
+						 num = convert.str();
+				
+						 printGL(num.c_str(),
+						 0.0,
+						 0.5 - i * 0.2,
+						 -3.0,
+						 0.1,
+						 0.15,
+						 0);				
+				
+				         break;
+				case 2 : convert << "  " << preview_nr;
+						 num = convert.str();
+				
+						 printGL(num.c_str(),
+						 0.0,
+						 0.5 - i * 0.2,
+						 -3.0,
+						 0.1,
+						 0.15,
+						 0);				
+				
+				         break;
+				case 3 : convert << "  " << speed;
+						 num = convert.str();
+				
+						 printGL(num.c_str(),
+						 0.0,
+						 0.5 - i * 0.2,
+						 -3.0,
+						 0.1,
+						 0.15,
+						 0);				
+				
+				         break;
+				case 4 :	if (shadow)
+							{
+					    		 printGL("  Yes",
+								 0.0,
+								 0.5 - i * 0.2,
+								 -3.0,
+								 0.1,
+								 0.15,
+								 0);	
+							}
+							else
+							{
+								 printGL("  No",
+								 0.0,
+								 0.5 - i * 0.2,
+								 -3.0,
+								 0.1,
+								 0.15,
+								 0);	
+							}
+				
+				         
+						 
+						 break;
+				default : break;
+			}	
+		}
+		
+		glEnable(GL_DEPTH_TEST);
+	}
 
-    glClear(GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_DEPTH_BUFFER_BIT);
   
     glFlush();
     glutSwapBuffers();
 }
 
-void printGL(const char* text, float font_x, float font_y, float font_size_x, float font_size_y, unsigned char alignment, float r, float g, float b, float a)
+void printGL(const char* text, float font_x, float font_y, float font_z, float font_size_x, float font_size_y, unsigned short alignment)
 {
 
-    glColor4f(r,g,b,a);
-
-    if (alignment)
+    if (alignment == 1)
     {
         font_x -= strlen(text) * font_size_x;
     }
+	else if (alignment == 2)
+	{
+	    font_x -= strlen(text) * font_size_x/2;
+	}
 
     glBindTexture(GL_TEXTURE_2D, texture[FONT_TEXTURE_NUM]);   // choose the texture to use.
 
     while (*text != '\0')
     {
         unsigned char y =  (*text) / 16;
-	unsigned char x =  (*text) % 16;
+	    unsigned char x =  (*text) % 16;
     
         glLoadIdentity(); 
         gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0);     
-        glTranslatef(font_x,font_y,-4.0);
+        glTranslatef(font_x,font_y,font_z);
 	 
         glBegin(GL_QUADS);
           glTexCoord2f((float)x/16.0f, (float)(16-y)/16.0f - 1.0/16.0f); glVertex3f(-font_size_x/2, -font_size_y/2, 0);
           glTexCoord2f((float)x/16.0f + 1.0/16.0f, (float)(16-y)/16.0f - 1.0/16.0f); glVertex3f(font_size_x/2, -font_size_y/2, 0);
-	  glTexCoord2f((float)x/16.0f + 1.0/16.0f, (float)(16-y)/16.0f); glVertex3f(font_size_x/2, font_size_y/2, 0);
+	      glTexCoord2f((float)x/16.0f + 1.0/16.0f, (float)(16-y)/16.0f); glVertex3f(font_size_x/2, font_size_y/2, 0);
           glTexCoord2f((float)x/16.0f, (float)(16-y)/16.0f); glVertex3f(-font_size_x/2, font_size_y/2, 0);
         glEnd();
      
         text++;
-	font_x += font_size_x;
+	    font_x += font_size_x;
     }
 }
 

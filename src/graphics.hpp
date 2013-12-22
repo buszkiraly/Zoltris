@@ -41,6 +41,6 @@ void display();
 int ImageLoad(char *filename, Image *image);
 void LoadGLTextures();
 void timer(int v);
-void printGL(const char* text, float font_x, float font_y, float font_size_x, float font_size_y, unsigned char alignment, float r, float g, float b, float a);
+void printGL(const char* text, float font_x, float font_y, float font_z, float font_size_x, float font_size_y, unsigned short alignment);
 
 #endif

@@ -58,6 +58,26 @@ Element::Element(Table *table, int type)
     }
 }
 
+Element::Element(const Element &from)
+{
+    table = from.getTable();
+	type = from.getType();
+	
+	spawned = false;
+	
+	x = from.getX();
+	y = from.getY();
+	
+	vector<Cell*> v_cells = from.getCells();
+	for (vector<Cell*>::iterator it = v_cells.begin(); it != v_cells.end(); it++)
+	{
+	    Cell *temp_cell = (Cell*)*it;
+	    cells[it-v_cells.begin()] = new Cell(temp_cell->getX(), temp_cell->getY(), type);
+	}
+	
+	 
+}
+
 Element::~Element()
 {
     for (int i = 0; i < 4; i++)
@@ -66,7 +86,7 @@ Element::~Element()
     }
 }
 
-bool Element::step(int dir)
+bool Element::step(int dir) 
 {
     int i = 0;
 
@@ -145,7 +165,7 @@ bool Element::step(int dir)
     
 }
 
-bool Element::rotate()
+bool Element::rotate() 
 {
 
     // rotate the element
@@ -234,7 +254,7 @@ bool Element::rotate()
     
 }
 
-vector<Cell*> Element::getCells()
+vector<Cell*> Element::getCells() const
 {
     vector<Cell*> ret;
     
@@ -242,7 +262,7 @@ vector<Cell*> Element::getCells()
     return ret;
 }
 
-vector<Cell*> Element::stealCells()
+vector<Cell*> Element::stealCells() 
 {
     vector<Cell*> ret;
     
@@ -254,7 +274,7 @@ vector<Cell*> Element::stealCells()
     return ret;
 }
 
-bool Element::reachedBottom()
+bool Element::reachedBottom() const
 {
     for (int i = 0; i < 4; i++)
     {
@@ -270,12 +290,12 @@ bool Element::reachedBottom()
     return false;
 }
 
-int Element::getType()
+int Element::getType() const
 {
     return type;
 }
 
-bool Element::isSpawned()
+bool Element::isSpawned() const
 {
     return spawned;
 }

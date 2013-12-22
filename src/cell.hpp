@@ -16,10 +16,10 @@ class Cell
 public:
     Cell(int x, int y, int type)
     {
-        this->x = x; 
+    this->x = x; 
 	this->y = y;
     
-        this->r = r;
+	this->r = r;
 	this->g = g;
 	this->b = b; 
 	

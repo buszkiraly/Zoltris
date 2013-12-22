@@ -19,17 +19,21 @@ class Element
     
 public:
     Element(Table *table, int type);
+	Element(const Element &from);
     ~Element();
     
     bool step(int dir);
     bool rotate();
-    vector<Cell*> getCells();
+    vector<Cell*> getCells() const;
     vector<Cell*> stealCells();
-    bool reachedBottom();
-    int getType();
-    bool isSpawned();
+    bool reachedBottom() const;
+    int getType() const;
+    bool isSpawned() const;
     void spawn();
     void setCenter(int x, int y);
+	int getX() const {return x;}
+	int getY() const {return y;}
+	Table *getTable() const {return table;}
     
 };
 
