@@ -4,7 +4,6 @@
 typedef enum t_gamestate
 {
   game = 0,
-  paused,
   menu,
   options,
   end

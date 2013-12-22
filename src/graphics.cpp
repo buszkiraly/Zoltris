@@ -286,7 +286,7 @@ void display()
     vector<Cell*> cells = table->getCells();
     vector<Cell*> elem_cells;
    
-    if (elements[0] && elements[1]) 
+    if (elements[0]) 
     {
         elem_cells = elements[0]->getCells();
         cells.reserve(cells.size() + elem_cells.size());
@@ -469,22 +469,7 @@ void display()
 		y_index -= 0.125;	
 	}	   
     
-    if (gamestate == paused)
-    {
-    glLoadIdentity();
-    gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0); 
-    glBindTexture(GL_TEXTURE_2D, texture[PAUSE_TEXTURE_NUM]);
-        glDisable(GL_DEPTH_TEST);
-        glColor4f(1.0,1.0,1.0,1);
-        glBegin(GL_QUADS);
-          glTexCoord2f(0.0f, 0.0f); glVertex3f(-1,-1,-2);
-          glTexCoord2f(1.0f, 0.0f); glVertex3f(1,-1,-2);
-          glTexCoord2f(1.0f, 1.0f); glVertex3f(1,1,-2);
-          glTexCoord2f(0.0f, 1.0f); glVertex3f(-1,1,-2);
-        glEnd();
-	glEnable(GL_DEPTH_TEST);
-    }	
-	else if (gamestate == end)
+    if (gamestate == end)
 	{
 	    glLoadIdentity();
 		gluLookAt(0,0,eyez,0.0,0.0,-4,0,1,0); 
@@ -536,8 +521,15 @@ void display()
 		
 		for (int i = 0; i < 5; i++)
 		{
-			if (i == menu_index) glColor4f(1,0,0,1);
-			else glColor4f(0,1,0,1);
+			if (!elements[0] && (i == 1) ) 
+			{
+				glColor4f(0.5,0.5,0.5,1);
+			}
+			else 
+			{
+			    if (i == menu_index) glColor4f(1,0,0,1);
+				else glColor4f(0,1,0,1);
+			}	
 			printGL(main_menu[i],
 				0.0,
 				0.5 - i * 0.2,

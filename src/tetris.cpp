@@ -38,12 +38,13 @@ void inc_speed();
 void dec_speed();
 void inc_preview_nr();
 void dec_preview_nr();
+void clear_table();
 
 long score = 0;
 bool _pause = false;
 bool to_rotate = false;
 unsigned short dir_to_step = -1;
-t_gamestate gamestate = game;
+t_gamestate gamestate = menu;
 string player_name = "";
 vector<player_score> scores;
 player_score pl_score;
@@ -77,10 +78,13 @@ int main(int argc, char** argv)
 
     // elements init
 	elements = (Element**)malloc((preview_nr+1)*sizeof(Element*));
-    elements[0] = new Element(table,rand()%7);
+	elements[0] = NULL;
+    /*
+	elements[0] = new Element(table,rand()%7);
     elements[0]->spawn();
     for (int i = 0; i < preview_nr; i++)
 		elements[i+1] = new Element(table,rand()%7);
+	*/
 
     // OpenGL Init
     graphics_init(argc,argv);
@@ -205,8 +209,8 @@ void attachElement()
 		{
 			if ( !compare_scores(pl_score,scores[MAX_SCORES-1]) )
 			{
-				restart();
-				gamestate = game;
+				clear_table();
+				gamestate = menu;
 			}
 			else gamestate = end;
         }
@@ -220,7 +224,6 @@ void keyboard_callback(unsigned char key,int x, int y)
     switch (gamestate)
 	{
 	    case game:
-			if (key == 'p') gamestate = paused;
 			if (key == 'r') restart();
 			if (key == 27) 
 			{
@@ -230,17 +233,6 @@ void keyboard_callback(unsigned char key,int x, int y)
 			
 			break;
 		
-		case paused:
-			if (key == 'p') gamestate = game;
-			if (key == 'r') 
-			{
-			    restart();
-			    gamestate = game;
-			}
-			if (key == 27) exit(0);
-			
-			break;
-			
 		case end: 
 		    
 		    switch (key)
@@ -277,7 +269,7 @@ void keyboard_callback(unsigned char key,int x, int y)
 		
 		    break;
 			
-		case menu: if (key == 27) gamestate = game;
+		case menu: if ( (key == 27) && (elements[0]) ) gamestate = game;
 		           if (key == 13)
 				   {
 				       switch (menu_index)
@@ -319,11 +311,7 @@ void keyboard_callback(unsigned char key,int x, int y)
 
 void special_callback(int key,int x, int y)
 {
-
-    if (_pause) return;
-
-    if (elements[0] == NULL) return; 
-    
+  
 	switch (gamestate)
 	{
 	    case game:
@@ -357,10 +345,14 @@ void special_callback(int key,int x, int y)
 			case GLUT_KEY_UP:
 				if (menu_index) menu_index--;
 				else menu_index = 3;
+				
+				if ( (menu_index == 1) && !elements[0]) menu_index--;
 				break;
 			case GLUT_KEY_DOWN:
-				if (menu_index<3) menu_index++;
+				if (menu_index < 3) menu_index++;
 				else menu_index = 0;
+				
+				if ( (menu_index == 1) && !elements[0] ) menu_index++;
 				break;
 			default:
 				break;
@@ -451,6 +443,15 @@ void restart()
     score = 0;
 	player_name = "";
     _pause = false;
+}
+
+void clear_table()
+{
+	delete table;
+    table = new Table(WIDTH, HEIGHT);
+	for (int i = 0; i <= preview_nr; i++)
+		delete elements[i];	
+	elements[0] = NULL;
 }
 
 void load_scores()
